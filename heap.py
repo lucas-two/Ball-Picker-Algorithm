@@ -1,9 +1,10 @@
-# BALL PICKER v0.5
+# BALL PICKER v1.0
 # Author: Lucas Geurtjens (s5132841)
 # Date: 10/05/2019
 
 import math
-import random
+import os
+import sys
 
 
 # We create a class for storing the ball objects.
@@ -13,16 +14,7 @@ class Ball:
         self.status = status  # Has the ball been picked or not?
 
 
-# Max Heap
-"""
-Helper Functions:
-    - Get an index (parent, left or right child)
-    - Check if that index is valid
-    - Grab value from that index
-    - Swapping the values of two indexes
-"""
-
-
+# Functions for locating index of parent, left and right child
 def get_left(parent_index):
     return 2 * parent_index + 1
 
@@ -35,6 +27,7 @@ def get_parent(child_index):
     return math.floor((child_index - 1) / 2)
 
 
+# Functions for checking if the index of parent, left or right child exists
 def left_exists(index, balls):
     if get_left(index) < len(balls):  # Check if ball count is exceeded (doesn't exist)
         return True
@@ -53,6 +46,7 @@ def parent_exists(index):
     return True
 
 
+# Functions for grabbing the value at the given index
 def left(index, balls):
     return balls[get_left(index)].value[player]
 
@@ -92,11 +86,6 @@ def pop_ball(balls):
 
     if root.status is False:  # If this node has already been taken
         root = pop_ball(balls)  # Pop the next ball instead
-
-    # TEST CODE ONLY====
-    if root.status is True:
-        print("Picked", root.value[0], "(", root.value[1], ")", "as player", player)
-    # =================
 
     root.status = False  # We've used this ball now
 
@@ -199,7 +188,10 @@ def rusty_value(ball_value):
     return total
 
 
-def game(ball_size, round_turns, ball_list):
+def game(ball_size, round_turns, ball_list, starting_player):
+    """
+    Run though a game of ball picking
+    """
     global player
     score = [0, 0]  # Stores the total score of scott and rusty ([0] Scott, [1] Rusty)
 
@@ -217,17 +209,15 @@ def game(ball_size, round_turns, ball_list):
     for ball in range(len(ball_objects)):
         add_ball(ball_objects[ball], rusty_b)
 
-    # Decide who plays first
-    rusty_first = bool(random.getrandbits(1))
+    rusty_first = starting_player  # Who is playing first?
 
     # Rusty is first
     if rusty_first:
-        print("Rusty is first")
         while ball_size != 0:
 
             player = 1
             for _ in range(round_turns):  # For rounds, pop and add root to the score
-                score[1] += pop_ball(rusty_b).value[player]
+                score[1] += pop_ball(rusty_b).value[0]
                 ball_size -= 1
 
                 if ball_size == 0:  # Did we use all the balls?
@@ -238,7 +228,7 @@ def game(ball_size, round_turns, ball_list):
 
             player = 0
             for _ in range(round_turns):  # For rounds, pop and add root to the score
-                score[0] += pop_ball(scott_b).value[player]
+                score[0] += pop_ball(scott_b).value[0]
                 ball_size -= 1
 
                 if ball_size == 0:  # Did we use all the balls?
@@ -246,12 +236,11 @@ def game(ball_size, round_turns, ball_list):
 
     # Scott is first
     else:
-        print("Scott is first")
         while ball_size != 0:
 
             player = 0
             for _ in range(round_turns):  # For rounds, pop and add root to the score
-                score[0] += pop_ball(scott_b).value[player]
+                score[0] += pop_ball(scott_b).value[0]
                 ball_size -= 1
 
                 if ball_size == 0:  # Did we use all the balls?
@@ -262,7 +251,7 @@ def game(ball_size, round_turns, ball_list):
 
             player = 1
             for _ in range(round_turns):  # For rounds, pop and add root to the score
-                score[1] += pop_ball(rusty_b).value[player]
+                score[1] += pop_ball(rusty_b).value[0]
                 ball_size -= 1
 
                 if ball_size == 0:  # Did we use all the balls?
@@ -271,10 +260,45 @@ def game(ball_size, round_turns, ball_list):
     return score
 
 
-my_ball_size = 8
-my_round_turns = 2
-my_ball_list = [14, 41, 1, 32, 23, 11, 20, 100]
+def main():
+    """
+    Main of the program
+    """
+    try:
+        abs_location = os.path.abspath(sys.argv[1])  # Location of input file
 
-game_score = game(my_ball_size, my_round_turns, my_ball_list)
-print("Scott:", game_score[0])
-print("Rusty:", game_score[1])
+    except IndexError:
+        print("Error: Program must be run from the commandline with arguments.")
+        sys.exit(-1)
+
+    try:
+        input_f = open(abs_location, "r")
+
+    except FileNotFoundError:
+        print("Error: It appears that the input text file location (absolute location) was incorrect.")
+        print("       Try using 'input.txt.txt' in the file path if input.txt did not work.")
+        sys.exit(-1)
+
+    test_cases = int(input_f.readline())
+
+    for _ in range(test_cases):
+
+        my_ball_size, my_round_turns = input_f.readline().split()
+        my_ball_list = input_f.readline()
+        my_coin_toss = input_f.readline().strip()
+
+        my_ball_size = int(my_ball_size)
+        my_round_turns = int(my_round_turns)
+        my_ball_list = my_ball_list.split()
+        my_ball_list = [int(ball) for ball in my_ball_list]  # Convert the strings -> Integers
+        my_toss_result = True
+
+        if my_coin_toss == "HEADS":
+            my_toss_result = False
+
+        game_score = game(my_ball_size, my_round_turns, my_ball_list, my_toss_result)
+        print("%s %s" % (game_score[0], game_score[1]))
+
+
+if __name__ == "__main__":
+    main()
