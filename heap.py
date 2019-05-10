@@ -93,6 +93,11 @@ def pop_ball(balls):
     if root.status is False:  # If this node has already been taken
         root = pop_ball(balls)  # Pop the next ball instead
 
+    # TEST CODE ONLY====
+    if root.status is True:
+        print("Picked", root.value[0], "(", root.value[1], ")", "as player", player)
+    # =================
+
     root.status = False  # We've used this ball now
 
     return root
@@ -106,12 +111,16 @@ def heapify_up(balls):
 
     index = len(balls) - 1  # Look at the right most leaf node
 
-    # While we have a parent node and our current value is greater than it
-    while parent_exists(index) and balls[index].value[player] > parent(index, balls):
+    while parent_exists(index):
 
-        # CHECK IF PARENT = CHILD
-        # Then compare with actual value
-        # Only do for rusty
+        # (For Rusty Only)
+        # If the index node and parent are equal... Check which is bigger by comparing against true value
+        if player == 1 and balls[index].value[player] == parent(index, balls):
+            if balls[index].value[0] < balls[get_parent(index)].value[0]:  # If the parent is larger than the child
+                break  # Stop
+
+        elif balls[index].value[player] <= parent(index, balls):  # If the child is less or equal to the parent
+            break  # Stop
 
         swap(get_parent(index), index, balls)  # Swap the parent and current index
         index = get_parent(index)  # Set the index to the location of its parent
@@ -129,17 +138,27 @@ def heapify_down(balls):
 
         largest_child = get_left(index)  # Assume left is largest child
 
-        # If we have a right child and it's bigger -> right is largest child
-        if right_exists(index, balls) and right(index, balls) > left(index, balls):
-            largest_child = get_right(index)
-
-        # For rusty only, check if the values are equal, if so, compare the real values to see which was bigger
-        elif player == 0 and right_exists(index, balls) and right(index, balls) == left(index, balls):
+        # (For Rusty Only)
+        # If right and left are equal... Check which is bigger by comparing against true value
+        if player == 1 and right_exists(index, balls) and right(index, balls) == left(index, balls):
             if balls[get_right(index)].value[0] > balls[get_left(index)].value[0]:
                 largest_child = get_right(index)
 
-        # If we are bigger than the largest child -> we're in the right spot.
-        if balls[index].value[player] > balls[largest_child].value[player]:
+        # If we have a right child and it's bigger -> right is largest child
+        elif right_exists(index, balls) and right(index, balls) > left(index, balls):
+            largest_child = get_right(index)
+
+        # (For Rusty Only)
+        # If they are equal... Stop if the true value of our index is bigger than the largest child
+        if player == 1 and balls[index].value[player] == balls[largest_child].value[player]:
+            if balls[index].value[0] > balls[largest_child].value[0]:
+                break
+            else:
+                swap(index, largest_child, balls)
+                index = largest_child
+
+        # If our ball is bigger than the largest child ball, we must be in the right spot
+        elif balls[index].value[player] > balls[largest_child].value[player]:
             break
 
         # Otherwise, swap with the largest child
@@ -252,9 +271,9 @@ def game(ball_size, round_turns, ball_list):
     return score
 
 
-my_ball_size = 4
+my_ball_size = 8
 my_round_turns = 2
-my_ball_list = [32, 23, 1, 32]
+my_ball_list = [14, 41, 1, 32, 23, 11, 20, 100]
 
 game_score = game(my_ball_size, my_round_turns, my_ball_list)
 print("Scott:", game_score[0])
