@@ -1,5 +1,18 @@
-# Max Heap
+# BALL PICKER v0.5
+# Author: Lucas Geurtjens (s5132841)
+# Date: 10/05/2019
 
+import math
+
+
+# We create a class for storing the ball objects.
+class Ball:
+    def __init__(self, value, status):
+        self.value = [value, rusty_value(value)]  # [0] Scott's value, [1] Rusty's value
+        self.status = status  # Has the ball been picked or not?
+
+
+# Max Heap
 """
 Helper Functions:
     - Get an index (parent, left or right child)
@@ -18,7 +31,7 @@ def get_right(parent_index):
 
 
 def get_parent(child_index):
-    return round((child_index - 1) / 2)
+    return math.floor((child_index - 1) / 2)
 
 
 def left_exists(index, balls):
@@ -40,22 +53,19 @@ def parent_exists(index):
 
 
 def left(index, balls):
-    return balls[get_left(index)]
+    return balls[get_left(index)].value[player]
 
 
 def right(index, balls):
-    return balls[get_right(index)]
+    return balls[get_right(index)].value[player]
 
 
 def parent(index, balls):
-    return balls[get_parent(index)]
+    return balls[get_parent(index)].value[player]
 
 
 def swap(i, j, balls):
-    temp = balls[i]
-    balls[i] = balls[j]
-    balls[j] = temp
-    return balls
+    balls[i], balls[j] = balls[j], balls[i]
 
 
 def add_ball(ball, balls):
@@ -70,6 +80,10 @@ def pop_ball(balls):
     """
     Removes a ball from the heap
     """
+    # Check if no balls are left
+    if len(balls) == 0:
+        print("ERROR, NO MORE BALLS")
+        return
 
     swap(0, len(balls) - 1, balls)  # Swap root and right most leaf node
     root = balls.pop(len(balls) - 1)  # Pop the root (now leaf) node
@@ -83,17 +97,14 @@ def heapify_up(balls):
     Take our last index (perhaps just added),
     then bring it up to where it belongs.
     """
-    # IMPLEMENTATION: Note, we will need to adjust the 'values' in this part to account
-    # for rusty and scott's different value systems
 
     index = len(balls) - 1  # Look at the right most leaf node
 
     # While we have a parent node and our current value is greater than it
-    while parent_exists(index) and parent(index, balls) < balls[index]:
+    while parent_exists(index) and balls[index].value[player] > parent(index, balls):
 
-        parent_index = get_parent(index)  # Grab the parent index
-        swap(parent_index, index, balls)  # Swap the parent and current index
-        index = parent_index  # Set the index to the location of its parent
+        swap(get_parent(index), index, balls)  # Swap the parent and current index
+        index = get_parent(index)  # Set the index to the location of its parent
 
 
 def heapify_down(balls):
@@ -113,7 +124,7 @@ def heapify_down(balls):
             largest_child = get_right(index)
 
         # If we are bigger than the largest child -> we're in the right spot.
-        if balls[index] > balls[largest_child]:
+        if balls[index].value[player] > balls[largest_child].value[player]:
             break
 
         # Otherwise, swap with the largest child
@@ -121,44 +132,61 @@ def heapify_down(balls):
             swap(index, largest_child, balls)
             index = largest_child
 
-    return balls
 
+def init_balls(balls):
+    """
+    Initialise a set of ball objects
+    """
+    ball_obj_list = []  # List containing ball objects
+
+    ball_status = True  # Default status for initialised balls
+
+    # Create a list of ball objects with a value and status
+    for ball_value in balls:
+        ball_obj = Ball(ball_value, ball_status)
+        ball_obj_list.append(ball_obj)
+
+    return ball_obj_list
+
+
+def rusty_value(ball_value):
+    """
+    Calculates the value of Rusty's ball based on the
+    sum of integers in the value
+    """
+    total = 0
+
+    ball_value_str = str(ball_value)  # Convert the integer to a string
+
+    # Go though all "letters" of the integer string
+    for num in ball_value_str:
+        total += int(num)  # Add them to the total
+
+    return total
+
+
+global player
+player = 0
+
+my_balls = [12, 32, 13, 111, 32, 10]
+my_balls = [12, 32, 13, 111, 32, 111]
+ball_objects = init_balls(my_balls)
 
 scott_b = []
-add_ball(2, scott_b)
-add_ball(4, scott_b)
-add_ball(1, scott_b)
-add_ball(8, scott_b)
-add_ball(9, scott_b)
-add_ball(30, scott_b)
-add_ball(200, scott_b)
-add_ball(3, scott_b)
-print(scott_b)
+rusty_b = []
+#
+# for ball in range(len(ball_objects)):
+#     add_ball(ball_objects[ball], scott_b)
 
-temp = pop_ball(scott_b)
-print(scott_b, temp)
+player = 1
 
-temp = pop_ball(scott_b)
-print(scott_b, temp)
+for ball in range(len(ball_objects)):
+    add_ball(ball_objects[ball], rusty_b)
 
-temp = pop_ball(scott_b)
-print(scott_b, temp)
+for obj in scott_b:
+    print(obj.value[0], obj.status)
 
-temp = pop_ball(scott_b)
-print(scott_b, temp)
-
-temp = pop_ball(scott_b)
-print(scott_b, temp)
-
-temp = pop_ball(scott_b)
-print(scott_b, temp)
-
-temp = pop_ball(scott_b)
-print(scott_b, temp)
-
-temp = pop_ball(scott_b)
-print(scott_b, temp)
-
-# Add some kind of checking for if we've reached end of balls...
-
+print(" --- ")
+for obj in rusty_b:
+    print(obj.value[1], obj.status)
 
