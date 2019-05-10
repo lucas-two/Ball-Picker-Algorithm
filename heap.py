@@ -3,6 +3,7 @@
 # Date: 10/05/2019
 
 import math
+import random
 
 
 # We create a class for storing the ball objects.
@@ -89,6 +90,11 @@ def pop_ball(balls):
     root = balls.pop(len(balls) - 1)  # Pop the root (now leaf) node
     heapify_down(balls)  # Heapify down
 
+    if root.status is False:  # If this node has already been taken
+        root = pop_ball(balls)  # Pop the next ball instead
+
+    root.status = False  # We've used this ball now
+
     return root
 
 
@@ -102,6 +108,10 @@ def heapify_up(balls):
 
     # While we have a parent node and our current value is greater than it
     while parent_exists(index) and balls[index].value[player] > parent(index, balls):
+
+        # CHECK IF PARENT = CHILD
+        # Then compare with actual value
+        # Only do for rusty
 
         swap(get_parent(index), index, balls)  # Swap the parent and current index
         index = get_parent(index)  # Set the index to the location of its parent
@@ -122,6 +132,11 @@ def heapify_down(balls):
         # If we have a right child and it's bigger -> right is largest child
         if right_exists(index, balls) and right(index, balls) > left(index, balls):
             largest_child = get_right(index)
+
+        # For rusty only, check if the values are equal, if so, compare the real values to see which was bigger
+        elif player == 0 and right_exists(index, balls) and right(index, balls) == left(index, balls):
+            if balls[get_right(index)].value[0] > balls[get_left(index)].value[0]:
+                largest_child = get_right(index)
 
         # If we are bigger than the largest child -> we're in the right spot.
         if balls[index].value[player] > balls[largest_child].value[player]:
@@ -165,28 +180,82 @@ def rusty_value(ball_value):
     return total
 
 
-global player
-player = 0
+def game(ball_size, round_turns, ball_list):
+    global player
+    score = [0, 0]  # Stores the total score of scott and rusty ([0] Scott, [1] Rusty)
 
-my_balls = [12, 32, 13, 111, 32, 10]
-my_balls = [12, 32, 13, 111, 32, 111]
-ball_objects = init_balls(my_balls)
+    ball_objects = init_balls(ball_list)  # Initialise a list of ball objects
 
-scott_b = []
-rusty_b = []
-#
-# for ball in range(len(ball_objects)):
-#     add_ball(ball_objects[ball], scott_b)
+    # Initialise Scott's heap
+    player = 0
+    scott_b = []
+    for ball in range(len(ball_objects)):
+        add_ball(ball_objects[ball], scott_b)
 
-player = 1
+    # Initialise Rusty's heap
+    player = 1
+    rusty_b = []
+    for ball in range(len(ball_objects)):
+        add_ball(ball_objects[ball], rusty_b)
 
-for ball in range(len(ball_objects)):
-    add_ball(ball_objects[ball], rusty_b)
+    # Decide who plays first
+    rusty_first = bool(random.getrandbits(1))
 
-for obj in scott_b:
-    print(obj.value[0], obj.status)
+    # Rusty is first
+    if rusty_first:
+        print("Rusty is first")
+        while ball_size != 0:
 
-print(" --- ")
-for obj in rusty_b:
-    print(obj.value[1], obj.status)
+            player = 1
+            for _ in range(round_turns):  # For rounds, pop and add root to the score
+                score[1] += pop_ball(rusty_b).value[player]
+                ball_size -= 1
 
+                if ball_size == 0:  # Did we use all the balls?
+                    break
+
+            if ball_size == 0:  # Did we use all the balls?
+                break
+
+            player = 0
+            for _ in range(round_turns):  # For rounds, pop and add root to the score
+                score[0] += pop_ball(scott_b).value[player]
+                ball_size -= 1
+
+                if ball_size == 0:  # Did we use all the balls?
+                    break
+
+    # Scott is first
+    else:
+        print("Scott is first")
+        while ball_size != 0:
+
+            player = 0
+            for _ in range(round_turns):  # For rounds, pop and add root to the score
+                score[0] += pop_ball(scott_b).value[player]
+                ball_size -= 1
+
+                if ball_size == 0:  # Did we use all the balls?
+                    break
+
+            if ball_size == 0:  # Did we use all the balls?
+                break
+
+            player = 1
+            for _ in range(round_turns):  # For rounds, pop and add root to the score
+                score[1] += pop_ball(rusty_b).value[player]
+                ball_size -= 1
+
+                if ball_size == 0:  # Did we use all the balls?
+                    break
+
+    return score
+
+
+my_ball_size = 4
+my_round_turns = 2
+my_ball_list = [32, 23, 1, 32]
+
+game_score = game(my_ball_size, my_round_turns, my_ball_list)
+print("Scott:", game_score[0])
+print("Rusty:", game_score[1])
